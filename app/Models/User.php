@@ -3,14 +3,17 @@
 namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -19,8 +22,11 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
+        'phone_number',
+        'avatar',
     ];
 
     /**
@@ -44,6 +50,22 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function password(): Attribute
+    {
+        return Attribute::make(
+            set: function (string $value) {
+                $hasPassword = isset($this->original['password']);
+                $rehashOnLogin = config('hashing.rehash_on_login');
+                if ($hasPassword && $rehashOnLogin && Hash::needsRehash($this->original['password'])) {
+                    // prevent double hashing when enable auto rehash on login
+                    return $value;
+                }
+
+                return Hash::make($value);
+            }
+        );
     }
 
     public function chats(): BelongsToMany
