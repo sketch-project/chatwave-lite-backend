@@ -8,7 +8,6 @@ use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\Services\UserService;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
