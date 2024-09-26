@@ -2,11 +2,10 @@
 
 namespace App\Services;
 
-use App\Http\Requests\StoreUserRequest;
-use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\User\StoreUserRequest;
+use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
 use App\Repositories\UserRepository;
-use Illuminate\Auth\Events\Registered;
 
 readonly class UserService
 {

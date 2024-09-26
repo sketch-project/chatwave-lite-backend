@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class UserResource extends JsonResource
+class ChatResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -16,13 +16,14 @@ class UserResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'type' => $this->type,
             'name' => $this->name,
-            'username' => $this->username,
-            'email' => $this->email,
-            'phone_number' => $this->phone_number,
-            'is_admin' => $this->whenPivotLoaded('chat_participants', function () {
-                return $this->pivot->is_admin;
-            }),
+            'avatar' => $this->name,
+            'description' => $this->description,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'last_message' => $this->lastMessage,
+            'participants' => UserResource::collection($this->participants),
         ];
     }
 }

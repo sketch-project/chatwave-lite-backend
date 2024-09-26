@@ -14,8 +14,12 @@ return new class extends Migration
         Schema::create('chats', function (Blueprint $table) {
             $table->ulid('id')->primary();
             $table->enum('type', ['private', 'group'])->default('private');
-            $table->string('name');
+            $table->string('name')->nullable();
+            $table->text('description')->nullable();
+            $table->foreignUlid('last_message_id')->nullable()->index();
+            $table->string('avatar')->nullable();
             $table->timestamps();
+            $table->index('updated_at');
         });
     }
 

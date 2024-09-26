@@ -92,15 +92,13 @@ class BaseRepository
     /**
      * Default delete model.
      */
-    public function delete($model): bool|int|null
+    public function delete($model): bool
     {
-        if ($model instanceof Model) { // skip the repository, update directly
-            $result = $model->delete();
-        } else {
-            $result = $this->model->destroy($model);
+        if ($model instanceof Model) {
+            return (bool) $model->delete();
         }
 
-        return $result;
+        return $this->model->destroy($model) > 0;
     }
 
     /**

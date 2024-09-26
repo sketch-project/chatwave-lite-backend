@@ -13,9 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('chat_participants', function (Blueprint $table) {
-            $table->ulid('id')->primary();
             $table->foreignUlid('chat_id')->constrained('chats')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnUpdate()->cascadeOnDelete();
+            $table->boolean('is_admin')->default(true);
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->unique(['chat_id', 'user_id']);
         });
