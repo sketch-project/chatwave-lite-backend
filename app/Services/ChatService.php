@@ -4,14 +4,17 @@ namespace App\Services;
 
 use App\Enums\ChatType;
 use App\Http\Requests\Chat\StoreChatRequest;
+use App\Http\Requests\Chat\UpdateChatAvatarRequest;
 use App\Http\Requests\Chat\UpdateChatRequest;
 use App\Http\Resources\ChatResource;
 use App\Models\Chat;
 use App\Models\User;
 use App\Repositories\ChatRepository;
+use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 readonly class ChatService
@@ -51,7 +54,7 @@ readonly class ChatService
         });
     }
 
-    public function update(Chat $chat, UpdateChatRequest $request)
+    public function update(Chat $chat, UpdateChatRequest $request): bool
     {
         $avatar = $request->file('avatar');
         if ($avatar) {
@@ -60,11 +63,32 @@ readonly class ChatService
             $avatar = $chat->avatar;
         }
 
-        return $this->chatRepository->create([
+        return $this->chatRepository->update($chat, [
             'name' => $request->input('name'),
             'avatar' => $avatar,
             'description' => $request->input('description'),
         ]);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function updateAvatar(Chat $chat, UpdateChatAvatarRequest $request): bool
+    {
+        $avatar = $request->file('avatar');
+        if ($avatar = $avatar->store('avatars/' . date('Y/m'))) {
+            $lastAvatar = $chat->avatar;
+            $result = $this->chatRepository->update($chat, [
+                'avatar' => $avatar,
+            ]);
+
+            if ($lastAvatar) {
+                Storage::delete($lastAvatar);
+            }
+
+            return $result;
+        }
+        throw new Exception(__('Cannot upload avatar'));
     }
 
     /**

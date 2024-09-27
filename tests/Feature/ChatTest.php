@@ -8,6 +8,8 @@ use App\Models\ChatParticipant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ChatTest extends TestCase
@@ -209,6 +211,25 @@ class ChatTest extends TestCase
             'name' => $data['name'],
             'description' => $data['description'],
         ]);
+    }
+
+    public function test_update_avatar_group_chat_success(): void
+    {
+        $user = User::factory()->create();
+        $chat = Chat::factory()
+            ->group()
+            ->hasAttached($user, ['is_admin' => true], 'participants')
+            ->create();
+
+        Storage::fake('avatar');
+        $data = [
+            '_method' => 'put',
+            'avatar' => UploadedFile::fake()->image('avatar.jpg'),
+        ];
+
+        $response = $this->actingAs($user)->postJson(route('chats.update-avatar', $chat), $data);
+
+        $response->assertOk();
     }
 
     public function test_add_participant_on_group_chat(): void

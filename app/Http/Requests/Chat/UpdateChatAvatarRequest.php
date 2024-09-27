@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\File;
 
-class UpdateChatRequest extends FormRequest
+class UpdateChatAvatarRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,14 +24,12 @@ class UpdateChatRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['nullable', 'string', 'max:100'],
             'avatar' => [
-                'nullable',
+                'required',
                 File::image()
                     ->max('2mb')
                     ->dimensions(Rule::dimensions()->maxWidth(3000)->maxHeight(3000)),
             ],
-            'description' => ['nullable', 'string', 'max:300'],
         ];
     }
 }

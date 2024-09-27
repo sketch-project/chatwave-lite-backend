@@ -17,6 +17,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('chats/{chat}/remove-participant/{user}', [ChatController::class, 'removeParticipant'])->name('chats.remove-participant');
     Route::patch('chats/{chat}/make-admin/{user}', [ChatController::class, 'makeAsAdmin'])->name('chats.make-admin');
     Route::patch('chats/{chat}/dismiss-admin/{user}', [ChatController::class, 'dismissAsAdmin'])->name('chats.dismiss-admin');
+    Route::put('chats/{chat}/update-avatar', [ChatController::class, 'updateAvatar'])->name('chats.update-avatar');
 
     Route::get('/me', function (Request $request) {
         return $request->user();

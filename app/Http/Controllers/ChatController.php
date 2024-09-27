@@ -3,16 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Chat\StoreChatRequest;
+use App\Http\Requests\Chat\UpdateChatAvatarRequest;
 use App\Http\Requests\Chat\UpdateChatRequest;
 use App\Http\Resources\ChatResource;
 use App\Http\Resources\UserResource;
 use App\Models\Chat;
 use App\Models\User;
 use App\Services\ChatService;
+use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
@@ -49,13 +50,13 @@ class ChatController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function update(Chat $chat, UpdateChatRequest $request): JsonResponse
+    public function update(Chat $chat, UpdateChatRequest $request): ChatResource
     {
         $this->authorize('update', $chat);
 
-        $chat = $this->chatService->update($chat, $request);
+        $this->chatService->update($chat, $request);
 
-        return ChatResource::make($chat)->response()->setStatusCode(200);
+        return ChatResource::make($chat);
     }
 
     /**
@@ -66,9 +67,9 @@ class ChatController extends Controller
     {
         $this->authorize('group-admin', $chat);
 
-        $chat = $this->chatService->addParticipant($chat, $user);
+        $user = $this->chatService->addParticipant($chat, $user);
 
-        return UserResource::make($chat);
+        return UserResource::make($user);
     }
 
     /**
@@ -79,9 +80,9 @@ class ChatController extends Controller
     {
         $this->authorize('group-admin', $chat);
 
-        $chat = $this->chatService->removeParticipant($chat, $user);
+        $user = $this->chatService->removeParticipant($chat, $user);
 
-        return UserResource::make($chat);
+        return UserResource::make($user);
     }
 
     /**
@@ -92,9 +93,9 @@ class ChatController extends Controller
     {
         $this->authorize('group-admin', $chat);
 
-        $chat = $this->chatService->makeAsAdmin($chat, $user);
+        $user = $this->chatService->makeAsAdmin($chat, $user);
 
-        return UserResource::make($chat);
+        return UserResource::make($user);
     }
 
     /**
@@ -105,9 +106,22 @@ class ChatController extends Controller
     {
         $this->authorize('group-admin', $chat);
 
-        $chat = $this->chatService->dismissAsAdmin($chat, $user);
+        $user = $this->chatService->dismissAsAdmin($chat, $user);
 
-        return UserResource::make($chat);
+        return UserResource::make($user);
+    }
+
+    /**
+     * @throws AuthorizationException
+     * @throws Exception
+     */
+    public function updateAvatar(Chat $chat, UpdateChatAvatarRequest $request): ChatResource
+    {
+        $this->authorize('update', $chat);
+
+        $this->chatService->updateAvatar($chat, $request);
+
+        return ChatResource::make($chat);
     }
 
     /**
