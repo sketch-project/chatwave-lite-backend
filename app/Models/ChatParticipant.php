@@ -11,4 +11,12 @@ class ChatParticipant extends Model
     use HasFactory, HasUlids;
 
     const UPDATED_AT = null;
+
+    protected $fillable = [
+        'is_admin',
+    ];
+
+    protected $casts = [
+        'is_admin' => 'boolean',
+    ];
 }

@@ -20,7 +20,7 @@ class UserResource extends JsonResource
             'username' => $this->username,
             'email' => $this->email,
             'phone_number' => $this->phone_number,
-            'is_admin' => $this->whenPivotLoaded('chat_participants', function () {
+            'is_admin' => $this->whenPivotLoaded('chatParticipants', function () {
                 return $this->pivot->is_admin;
             }),
         ];

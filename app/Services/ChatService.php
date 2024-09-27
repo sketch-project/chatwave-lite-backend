@@ -9,6 +9,7 @@ use App\Http\Resources\ChatResource;
 use App\Models\Chat;
 use App\Models\User;
 use App\Repositories\ChatRepository;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -73,7 +74,7 @@ readonly class ChatService
     {
         if ($chat->type == ChatType::PRIVATE) {
             throw ValidationException::withMessages([
-                'chat' => 'Cannot add participant on private chat type.',
+                'chat' => __('Cannot add participant on private chat type.'),
             ]);
         }
 
@@ -87,11 +88,53 @@ readonly class ChatService
     {
         if ($chat->type == ChatType::PRIVATE) {
             throw ValidationException::withMessages([
-                'chat' => 'Cannot remove participant on private chat type.',
+                'chat' => __('Cannot remove participant on private chat type.'),
             ]);
         }
 
         return $this->chatRepository->removeParticipant($chat, $user);
+    }
+
+    /**
+     * @throws ValidationException
+     * @throws AuthorizationException
+     */
+    public function makeAsAdmin(Chat $chat, User $user): User
+    {
+        if ($chat->type == ChatType::PRIVATE) {
+            throw ValidationException::withMessages([
+                'chat' => __('Cannot assign the user as admin in a private chat.'),
+            ]);
+        }
+        $chatParticipants = $chat->participants;
+        if (!$chatParticipants->contains($user)) {
+            throw ValidationException::withMessages([
+                'user' => __('The user is not a participant in the group.'),
+            ]);
+        }
+
+        return $this->chatRepository->makeAsAdmin($chat, $user);
+    }
+
+    /**
+     * @throws ValidationException
+     * @throws AuthorizationException
+     */
+    public function dismissAsAdmin(Chat $chat, User $user): User
+    {
+        if ($chat->type == ChatType::PRIVATE) {
+            throw ValidationException::withMessages([
+                'chat' => __('Cannot dismiss the user as admin in a private chat.'),
+            ]);
+        }
+        $chatParticipants = $chat->participants;
+        if (!$chatParticipants->contains($user)) {
+            throw ValidationException::withMessages([
+                'user' => __('The user is not a participant in the group.'),
+            ]);
+        }
+
+        return $this->chatRepository->dismissAsAdmin($chat, $user);
     }
 
     public function delete(Chat $chat): bool

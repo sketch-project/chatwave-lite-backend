@@ -44,4 +44,18 @@ class ChatRepository extends BaseRepository
 
         return $user;
     }
+
+    public function makeAsAdmin(Chat $chat, User $user): User
+    {
+        $chat->participants()->syncWithPivotValues($user, ['is_admin' => true], false);
+
+        return $user;
+    }
+
+    public function dismissAsAdmin(Chat $chat, User $user): User
+    {
+        $chat->participants()->syncWithPivotValues($user, ['is_admin' => false], false);
+
+        return $user;
+    }
 }

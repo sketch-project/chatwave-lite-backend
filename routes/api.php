@@ -15,6 +15,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('chats/{chat}', [ChatController::class, 'destroy'])->name('chats.destroy');
     Route::patch('chats/{chat}/add-participant/{user}', [ChatController::class, 'addParticipant'])->name('chats.add-participant');
     Route::patch('chats/{chat}/remove-participant/{user}', [ChatController::class, 'removeParticipant'])->name('chats.remove-participant');
+    Route::patch('chats/{chat}/make-admin/{user}', [ChatController::class, 'makeAsAdmin'])->name('chats.make-admin');
+    Route::patch('chats/{chat}/dismiss-admin/{user}', [ChatController::class, 'dismissAsAdmin'])->name('chats.dismiss-admin');
 
     Route::get('/me', function (Request $request) {
         return $request->user();

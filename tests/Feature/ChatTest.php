@@ -186,16 +186,17 @@ class ChatTest extends TestCase
 
     public function test_update_chat_success(): void
     {
-        $chat = Chat::factory()->create();
+        $user = User::factory()->create();
+        $chat = Chat::factory()
+            ->hasAttached($user, [], 'participants')
+            ->create();
 
         $data = [
             'name' => $this->faker->name(),
             'description' => $this->faker->text(),
         ];
 
-        $user = $this->actingAs(User::factory()->create());
-
-        $response = $user->putJson(route('chats.update', $chat), $data);
+        $response = $this->actingAs($user)->putJson(route('chats.update', $chat), $data);
 
         $response->assertOk()->assertJson([
             'data' => [
@@ -291,6 +292,164 @@ class ChatTest extends TestCase
         $response->assertUnprocessable()->assertJson([
             'errors' => [
                 'chat' => ['Cannot remove participant on private chat type.'],
+            ]
+        ]);
+    }
+
+    public function test_promote_participant_as_admin_on_group_chat(): void
+    {
+        $user = User::factory()->create();
+        $otherParticipant = User::factory()->create();
+        $chat = Chat::factory()
+            ->group()
+            ->hasAttached($user, ['is_admin' => true], 'participants')
+            ->hasAttached($otherParticipant, ['is_admin' => false], 'participants')
+            ->create();
+
+        $response = $this->actingAs($user)->patchJson(route('chats.make-admin', ['chat' => $chat, 'user' => $otherParticipant]));
+
+        $response->assertOk()->assertJson([
+            'data' => [
+                'name' => $otherParticipant['name'],
+            ]
+        ]);
+
+        $this->assertDatabaseHas(ChatParticipant::class, [
+            'chat_id' => $chat->id,
+            'user_id' => $otherParticipant->id,
+            'is_admin' => 1,
+        ]);
+    }
+
+    public function test_cannot_promote_participant_as_admin_by_non_admin_user(): void
+    {
+        $user = User::factory()->create();
+        $otherParticipant = User::factory()->create();
+        $chat = Chat::factory()
+            ->group()
+            ->hasAttached($user, ['is_admin' => false], 'participants')
+            ->hasAttached($otherParticipant, ['is_admin' => false], 'participants')
+            ->create();
+
+        $response = $this->actingAs($user)->patchJson(route('chats.make-admin', ['chat' => $chat, 'user' => $otherParticipant]));
+
+        $response->assertForbidden()->assertJson([
+            'error' => 'You are not admin in the group.'
+        ]);
+    }
+
+    public function test_cannot_promote_participant_as_admin_on_private_chat(): void
+    {
+        $user = User::factory()->create();
+        $chat = Chat::factory()
+            ->private()
+            ->hasAttached($user, [], 'participants')
+            ->has(User::factory(), 'participants')
+            ->create();
+        $newParticipant = User::factory()->create();
+
+        $response = $this->actingAs($user)->patchJson(route('chats.make-admin', ['chat' => $chat, 'user' => $newParticipant]));
+
+        $response->assertUnprocessable()->assertJson([
+            'errors' => [
+                'chat' => ['Cannot assign the user as admin in a private chat.'],
+            ]
+        ]);
+    }
+
+    public function test_cannot_promote_participant_as_admin_if_not_participant_in_the_group(): void
+    {
+        $user = User::factory()->create();
+        $otherParticipant = User::factory()->create();
+        $chat = Chat::factory()
+            ->group()
+            ->hasAttached($user, ['is_admin' => true], 'participants')
+            ->create();
+
+        $response = $this->actingAs($user)->patchJson(route('chats.make-admin', ['chat' => $chat, 'user' => $otherParticipant]));
+
+        $response->assertUnprocessable()->assertJson([
+            'errors' => [
+                'user' => ['The user is not a participant in the group.'],
+            ]
+        ]);
+    }
+
+    public function test_dismiss_participant_as_admin_on_group_chat(): void
+    {
+        $user = User::factory()->create();
+        $otherParticipant = User::factory()->create();
+        $chat = Chat::factory()
+            ->group()
+            ->hasAttached($user, ['is_admin' => true], 'participants')
+            ->hasAttached($otherParticipant, ['is_admin' => true], 'participants')
+            ->create();
+
+        $response = $this->actingAs($user)->patchJson(route('chats.dismiss-admin', ['chat' => $chat, 'user' => $otherParticipant]));
+
+        $response->assertOk()->assertJson([
+            'data' => [
+                'name' => $otherParticipant['name'],
+            ]
+        ]);
+
+        $this->assertDatabaseHas(ChatParticipant::class, [
+            'chat_id' => $chat->id,
+            'user_id' => $otherParticipant->id,
+            'is_admin' => 0,
+        ]);
+    }
+
+    public function test_cannot_dismiss_participant_as_admin_by_non_admin_user(): void
+    {
+        $user = User::factory()->create();
+        $otherParticipant = User::factory()->create();
+        $chat = Chat::factory()
+            ->group()
+            ->hasAttached($user, ['is_admin' => false], 'participants')
+            ->hasAttached($otherParticipant, ['is_admin' => false], 'participants')
+            ->create();
+
+        $response = $this->actingAs($user)->patchJson(route('chats.dismiss-admin', ['chat' => $chat, 'user' => $otherParticipant]));
+
+        $response->assertForbidden()->assertJson([
+            'error' => 'You are not admin in the group.'
+        ]);
+    }
+
+    public function test_cannot_dismiss_participant_as_admin_on_private_chat(): void
+    {
+        $user = User::factory()->create();
+        $chat = Chat::factory()
+            ->private()
+            ->hasAttached($user, [], 'participants')
+            ->has(User::factory(), 'participants')
+            ->create();
+        $newParticipant = User::factory()->create();
+
+        $response = $this->actingAs($user)->patchJson(route('chats.dismiss-admin', ['chat' => $chat, 'user' => $newParticipant]));
+
+        $response->assertUnprocessable()->assertJson([
+            'errors' => [
+                'chat' => ['Cannot dismiss the user as admin in a private chat.'],
+            ]
+        ]);
+    }
+
+    public function test_cannot_dismiss_participant_as_admin_if_not_participant_in_the_group(): void
+    {
+        $user = User::factory()->create();
+        $otherParticipant = User::factory()->create();
+        $chat = Chat::factory()
+            ->group()
+            ->hasAttached($user, ['is_admin' => true], 'participants')
+            ->create();
+
+        $response = $this->actingAs($user)->patchJson(route('chats.dismiss-admin', ['chat' => $chat, 'user' => $otherParticipant]));
+
+        $response->assertUnprocessable()->assertJson([
+            'errors' => [
+                'user' => ['The user is not a participant in the group.'],
             ]
         ]);
     }
