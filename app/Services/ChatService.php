@@ -6,12 +6,12 @@ use App\Enums\ChatType;
 use App\Http\Requests\Chat\StoreChatRequest;
 use App\Http\Requests\Chat\UpdateChatAvatarRequest;
 use App\Http\Requests\Chat\UpdateChatRequest;
-use App\Http\Resources\ChatResource;
 use App\Models\Chat;
 use App\Models\User;
 use App\Repositories\ChatRepository;
 use Exception;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -25,19 +25,28 @@ readonly class ChatService
 
     public function getAllPaginated(Request $request)
     {
-        $chats = $this->chatRepository->getAllPaginated($request);
-
-        return ChatResource::collection($chats);
+        return $this->chatRepository->getAllPaginated($request);
     }
 
-    public function create(StoreChatRequest $request)
+    public function create(StoreChatRequest $request): Chat
     {
         $avatar = $request->file('avatar');
         if ($avatar) {
             $avatar = $avatar->store('avatars/' . date('Y/m')) ?: null;
         }
 
-        return DB::transaction(function () use ($request, $avatar) {
+        $participants = $request->input('participants', []);
+
+        if ($request->input('type') == ChatType::PRIVATE->value) {
+            $existingChat = $this->chatRepository->getPrivateChatByUserIds([
+                $request->user()->id, ...$participants,
+            ]);
+            if (!empty($existingChat)) {
+                return $existingChat;
+            }
+        }
+
+        return DB::transaction(function () use ($request, $avatar, $participants) {
             $chat = $this->chatRepository->create([
                 'type' => $request->input('type'),
                 'name' => $request->input('name'),
@@ -46,8 +55,10 @@ readonly class ChatService
             ]);
 
             $this->chatRepository->addParticipants($chat, [
-                ...$request->input('participants', []),
-                auth()->user()->id,
+                $request->user()->id => ['is_admin' => true],
+                ...collect($participants)
+                    ->mapWithKeys(fn ($id) => [$id => ['is_admin' => false]])
+                    ->toArray(),
             ]);
 
             return $chat;
@@ -93,6 +104,7 @@ readonly class ChatService
 
     /**
      * @throws ValidationException
+     * @throws Exception
      */
     public function addParticipant(Chat $chat, User $user): User
     {
@@ -102,7 +114,18 @@ readonly class ChatService
             ]);
         }
 
-        return $this->chatRepository->addParticipant($chat, $user);
+        if ($chat->participants->contains($user)) {
+            throw ValidationException::withMessages([
+                'user' => __('The user is already a participant in the group.'),
+            ]);
+        }
+
+        $this->chatRepository->addParticipant($chat, $user);
+
+        if ($chat->refresh()->participants->contains($user)) {
+            return $user;
+        }
+        throw new Exception(__('Cannot add participant.'));
     }
 
     /**
@@ -116,7 +139,11 @@ readonly class ChatService
             ]);
         }
 
-        return $this->chatRepository->removeParticipant($chat, $user);
+        if ($this->chatRepository->removeParticipant($chat, $user) == 0) {
+            throw new ModelNotFoundException(__('The user is not found in the group.'));
+        }
+
+        return $user;
     }
 
     /**

@@ -15,7 +15,6 @@ return new class extends Migration
             $table->ulid('id');
             $table->string('file_path');
             $table->string('file_name')->nullable();
-            $table->enum('media_type', ['image', 'voice_note', 'video', 'file', 'contact']);
             $table->string('mime_type')->nullable();
             $table->timestamps();
         });

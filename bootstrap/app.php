@@ -24,7 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
             ->api([
                 ApiJsonFormatter::class,
             ])
-            ->append(AddRequestContext::class);
+            ->append(AddRequestContext::class)
+            ->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->renderable(function (NotFoundHttpException $e, Request $request) {

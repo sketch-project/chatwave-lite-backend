@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\Services\UserService;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -37,5 +38,10 @@ class AuthController extends Controller
         $user = $this->userService->create($request);
 
         return UserResource::make($user);
+    }
+
+    public function me(Request $request): UserResource
+    {
+        return UserResource::make($request->user());
     }
 }

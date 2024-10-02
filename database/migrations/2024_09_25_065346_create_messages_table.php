@@ -19,6 +19,7 @@ return new class extends Migration
             $table->text('content')->nullable();
             $table->foreignUlid('reply_id')->index()->nullable();
             $table->foreignUlid('media_id')->nullable();
+            $table->boolean('is_forwarded')->default(false);
             $table->timestamps();
         });
     }

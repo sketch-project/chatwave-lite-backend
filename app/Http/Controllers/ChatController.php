@@ -44,7 +44,7 @@ class ChatController extends Controller
 
         $chat = $this->chatService->create($request);
 
-        return ChatResource::make($chat);
+        return ChatResource::make($chat->load('participants'));
     }
 
     /**
@@ -56,7 +56,7 @@ class ChatController extends Controller
 
         $this->chatService->update($chat, $request);
 
-        return ChatResource::make($chat);
+        return ChatResource::make($chat->load('participants'));
     }
 
     /**

@@ -2,13 +2,15 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login'])->name('login');
 Route::post('register', [AuthController::class, 'register'])->name('register');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('me', [AuthController::class, 'me']);
+
     Route::get('chats', [ChatController::class, 'index'])->name('chats.index');
     Route::post('chats', [ChatController::class, 'store'])->name('chats.store');
     Route::put('chats/{chat}', [ChatController::class, 'update'])->name('chats.update');
@@ -19,7 +21,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('chats/{chat}/dismiss-admin/{user}', [ChatController::class, 'dismissAsAdmin'])->name('chats.dismiss-admin');
     Route::put('chats/{chat}/update-avatar', [ChatController::class, 'updateAvatar'])->name('chats.update-avatar');
 
-    Route::get('/me', function (Request $request) {
-        return $request->user();
-    });
+    Route::get('chats/{chat}/messages', [MessageController::class, 'index'])->name('chats.messages.index');
+    Route::post('chats/{chat}/messages', [MessageController::class, 'store'])->name('chats.messages.store');
+    Route::put('messages/{message}', [MessageController::class, 'update'])->name('chats.messages.update');
+    Route::delete('messages/{message}', [MessageController::class, 'destroy'])->name('chats.messages.destroy');
 });

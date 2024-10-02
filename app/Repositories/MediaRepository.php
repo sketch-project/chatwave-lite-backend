@@ -4,7 +4,10 @@ namespace App\Repositories;
 
 use App\Models\Media;
 
-class MediaRepository
+class MediaRepository extends BaseRepository
 {
-    public function __construct(private Media $model) {}
+    public function __construct(Media $model)
+    {
+        parent::__construct($model);
+    }
 }

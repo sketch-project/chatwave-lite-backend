@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class Chat extends Model
 {
@@ -19,6 +18,7 @@ class Chat extends Model
     protected $fillable = [
         'type',
         'name',
+        'avatar',
         'description',
     ];
 
@@ -47,7 +47,7 @@ class Chat extends Model
     {
         return Attribute::make(
             get: fn (?string $value, array $attributes) => $attributes['avatar']
-                ? Storage::url($attributes['avatar'])
+                ? route('static-asset', $attributes['avatar'])
                 : null
         );
     }
