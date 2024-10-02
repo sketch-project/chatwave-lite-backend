@@ -30,14 +30,13 @@ class StoreChatRequest extends FormRequest
             'name' => ['nullable', 'string', 'max:100'],
             'avatar' => [
                 'nullable',
-                'string',
                 File::image()
                     ->max('2mb')
                     ->dimensions(Rule::dimensions()->maxWidth(3000)->maxHeight(3000)),
             ],
             'description' => ['nullable', 'string', 'max:300'],
             'participants' => [
-                'nullable', 'array',
+                'array',
                 $this->input('type') == ChatType::GROUP->value
                     ? 'min:2' // group at least total participant is 2 (+1 initiated user)
                     : 'size:1', // private should only 1 (+1 initiated user)

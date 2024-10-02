@@ -75,6 +75,40 @@ class ChatTest extends TestCase
         $this->assertTrue($participants->contains($user2->id));
     }
 
+    public function test_create_private_chat_with_existing_one(): void
+    {
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
+
+        Chat::factory()
+            ->private()
+            ->hasAttached([$user1, $user2], [], 'participants')
+            ->create();
+
+        $data = [
+            'type' => ChatType::PRIVATE,
+            'participants' => [$user2->id],
+        ];
+
+        $response = $this->actingAs($user1)->postJson(route('chats.store'), $data);
+
+        $response->assertOk()->assertJson([ // Assert OK rather Created
+            'data' => [
+                'type' => $data['type']->value,
+                'participants' => [
+                    [
+                        'id' => $user1->id,
+                        'name' => $user1->name,
+                    ],
+                    [
+                        'id' => $user2->id,
+                        'name' => $user2->name,
+                    ],
+                ]
+            ]
+        ]);
+    }
+
     public function test_create_private_chat_cannot_add_multi_user(): void
     {
         $user1 = User::factory()->create();
@@ -123,10 +157,12 @@ class ChatTest extends TestCase
         $user2 = User::factory()->create();
         $user3 = User::factory()->create();
 
+        Storage::fake('avatar');
         $data = [
             'type' => ChatType::GROUP,
             'name' => $this->faker->name(),
             'description' => $this->faker->text(),
+            'avatar' => UploadedFile::fake()->image('avatar.jpg'),
             'participants' => [$user2->id, $user3->id],
         ];
 
@@ -256,6 +292,24 @@ class ChatTest extends TestCase
         ]);
     }
 
+    public function test_cannot_add_participant_on_that_already_exist(): void
+    {
+        $user = User::factory()->create();
+        $newParticipant = User::factory()->create();
+        $chat = Chat::factory()
+            ->group()
+            ->hasAttached([$user, $newParticipant], [], 'participants')
+            ->create();
+
+        $response = $this->actingAs($user)->patchJson(route('chats.add-participant', ['chat' => $chat, 'user' => $newParticipant]));
+
+        $response->assertUnprocessable()->assertJson([
+            'errors' => [
+                'user' => ['The user is already a participant in the group.'],
+            ]
+        ]);
+    }
+
     public function test_cannot_add_participant_on_private_chat(): void
     {
         $user = User::factory()->create();
@@ -285,17 +339,30 @@ class ChatTest extends TestCase
             ->hasAttached([$user, ...$otherUsers, $removedParticipant], [], 'participants')
             ->create();
 
-        $response = $this->actingAs($user)->patchJson(route('chats.remove-participant', ['chat' => $chat, 'user' => $removedParticipant]));
+        $response = $this->actingAs($user)->deleteJson(route('chats.remove-participant', ['chat' => $chat, 'user' => $removedParticipant]));
 
-        $response->assertOk()->assertJson([
-            'data' => [
-                'name' => $removedParticipant['name'],
-            ]
-        ]);
+        $response->assertNoContent();
 
         $this->assertDatabaseMissing(ChatParticipant::class, [
             'chat_id' => $chat->id,
             'user_id' => $removedParticipant->id,
+        ]);
+    }
+
+    public function test_cannot_remove_participant_when_user_is_not_participant(): void
+    {
+        $user = User::factory()->create();
+        $chat = Chat::factory()
+            ->group()
+            ->hasAttached($user, ['is_admin' => 1], 'participants')
+            ->has(User::factory(), 'participants')
+            ->create();
+        $otherParticipant = User::factory()->create();
+
+        $response = $this->actingAs($user)->deleteJson(route('chats.remove-participant', ['chat' => $chat, 'user' => $otherParticipant]));
+
+        $response->assertNotFound()->assertJson([
+            'error' => 'The user is not found in the group.'
         ]);
     }
 
@@ -308,7 +375,7 @@ class ChatTest extends TestCase
             ->hasAttached([$user, $participant], [], 'participants')
             ->create();
 
-        $response = $this->actingAs($user)->patchJson(route('chats.remove-participant', ['chat' => $chat, 'user' => $participant]));
+        $response = $this->actingAs($user)->deleteJson(route('chats.remove-participant', ['chat' => $chat, 'user' => $participant]));
 
         $response->assertUnprocessable()->assertJson([
             'errors' => [

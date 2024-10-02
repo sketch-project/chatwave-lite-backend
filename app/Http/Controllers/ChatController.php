@@ -76,13 +76,13 @@ class ChatController extends Controller
      * @throws ValidationException
      * @throws AuthorizationException
      */
-    public function removeParticipant(Chat $chat, User $user): UserResource
+    public function removeParticipant(Chat $chat, User $user): Response
     {
         $this->authorize('group-admin', $chat);
 
-        $user = $this->chatService->removeParticipant($chat, $user);
+        $this->chatService->removeParticipant($chat, $user);
 
-        return UserResource::make($user);
+        return response()->noContent();
     }
 
     /**
