@@ -27,7 +27,7 @@ class MessageController extends Controller
      */
     public function index(Chat $chat): AnonymousResourceCollection
     {
-        $this->authorize('view-any', $chat);
+        $this->authorize('view-any', [Message::class, $chat]);
 
         return MessageResource::collection($this->messageService->getAllPaginated($chat));
     }
@@ -39,7 +39,7 @@ class MessageController extends Controller
      */
     public function store(Chat $chat, StoreMessageRequest $request): MessageResource
     {
-        $this->authorize('create', $chat);
+        $this->authorize('create', [Message::class, $chat]);
 
         return MessageResource::make($this->messageService->create($chat, $request));
     }
@@ -60,9 +60,13 @@ class MessageController extends Controller
 
     /**
      * Remove the specified resource from storage.
+     *
+     * @throws AuthorizationException
      */
     public function destroy(Message $message): Response
     {
+        $this->authorize('delete', $message);
+
         $this->messageService->delete($message);
 
         return response()->noContent();

@@ -16,6 +16,7 @@ class MessageResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'chat_id' => $this->chat_id,
             'user_id' => $this->user_id,
             'message_type' => $this->message_type,
             'content' => $this->content,
@@ -23,6 +24,7 @@ class MessageResource extends JsonResource
                 return new ReplyMessageResource($this->reply);
             }),
             'media' => MediaResource::make($this->media),
+            'is_forwarded' => $this->is_forwarded,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
