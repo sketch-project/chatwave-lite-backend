@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\AccountController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('login', [AuthController::class, 'login'])->name('login');
@@ -11,6 +12,7 @@ Route::post('register', [AuthController::class, 'register'])->name('register');
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('me', [AuthController::class, 'me'])->name('profile');
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+    Route::put('account', [AccountController::class, 'update'])->name('users.update');
 
     Route::get('chats', [ChatController::class, 'index'])->name('chats.index');
     Route::post('chats', [ChatController::class, 'store'])->name('chats.store');

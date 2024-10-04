@@ -30,7 +30,7 @@ class StoreMessageRequest extends FormRequest
             'content' => 'required|string|max:2000',
             'media' => [
                 Rule::requiredIf($this->input('message_type') != MessageType::TEXT->value),
-                $this->input('message_type') == MessageType::IMAGE
+                $this->input('message_type') == MessageType::IMAGE->value
                     ? File::image()
                         ->max('2mb')
                         ->dimensions(Rule::dimensions()->maxWidth(3000)->maxHeight(3000))

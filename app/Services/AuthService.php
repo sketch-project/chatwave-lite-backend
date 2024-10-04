@@ -24,6 +24,9 @@ readonly class AuthService
         if (filter_var($username, FILTER_VALIDATE_EMAIL)) {
             $usernameField = 'email';
             $user = $this->userRepository->getByEmail($username);
+        } elseif (is_numeric($username)) {
+            $usernameField = 'phone_number';
+            $user = $this->userRepository->getByPhoneNumber($username);
         } else {
             $usernameField = 'username';
             $user = $this->userRepository->getByUsername($username);
@@ -41,7 +44,7 @@ readonly class AuthService
         ], $remember);
 
         if (!$result) {
-            throw new AuthenticationException('Wrong authentication credentials');
+            throw new AuthenticationException(__('Wrong authentication credentials'));
         }
 
         $token = $user->createToken('app');

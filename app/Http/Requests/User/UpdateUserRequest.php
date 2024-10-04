@@ -25,21 +25,28 @@ class UpdateUserRequest extends FormRequest
      */
     public function rules(): array
     {
-        $uniqueUsernameRule = Rule::unique(User::class, 'username')->ignore($this->route('user'));
-        $uniqueEmailRule = Rule::unique(User::class, 'email')->ignore($this->route('user'));
+        $user = $this->user();
+        $uniqueUsernameRule = Rule::unique(User::class, 'username')->ignore($user);
+        $uniqueEmailRule = Rule::unique(User::class, 'email')->ignore($user);
+        $uniquePhoneRule = Rule::unique(User::class, 'phone_number')->ignore($user);
 
         return [
             'name' => 'required|max:100',
             'username' => ['required', 'min:3', 'max:30', "regex:/^[a-zA-Z0-9_\-.]+$/", $uniqueUsernameRule],
             'email' => ['required', 'max:50', $uniqueEmailRule],
-            'phone_number' => 'required|max:20',
+            'phone_number' => ['required', 'max:20', $uniquePhoneRule],
             'avatar' => [
                 'nullable',
                 File::image()
                     ->max('2mb')
                     ->dimensions(Rule::dimensions()->maxWidth(3000)->maxHeight(3000)),
             ],
-            'password' => [$this->filled('password') ? 'confirmed' : 'nullable', Password::min(5)],
+            'password' => [
+                'nullable',
+                'string',
+                'confirmed',
+                Password::min(5)
+            ],
         ];
     }
 

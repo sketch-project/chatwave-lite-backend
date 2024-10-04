@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\User\StoreUserRequest;
+use App\Http\Resources\AuthResource;
 use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\Services\UserService;
@@ -21,17 +22,13 @@ class AuthController extends Controller
     /**
      * @throws AuthenticationException
      */
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): AuthResource
     {
         $username = $request->post('username');
         $password = $request->post('password');
         $result = $this->authService->authenticate($username, $password);
 
-        return [
-            'data' => $result['user'],
-            'access_token' => $result['access_token'],
-            'refresh_token' => $result['refresh_token'],
-        ];
+        return AuthResource::make($result);
     }
 
     public function logout(Request $request): JsonResponse

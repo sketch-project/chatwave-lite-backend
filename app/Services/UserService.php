@@ -41,6 +41,8 @@ readonly class UserService
         }
         $user->fill($data);
 
+        $this->userRepository->update($user, $data);
+
         return $user->save();
     }
 
