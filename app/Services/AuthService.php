@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\TransientToken;
 
 readonly class AuthService
 {
@@ -59,11 +60,14 @@ readonly class AuthService
 
     public function logout(Request $request): void
     {
-        $request->user()->currentAccessToken()?->delete();
-
-        Auth::logout();
+        $currentAccessToken = auth()->user()->currentAccessToken();
+        if ($currentAccessToken && !$currentAccessToken instanceof TransientToken) {
+            $currentAccessToken->delete();
+        }
 
         if ($request->hasSession()) {
+            Auth::logout();
+
             $request->session()->invalidate();
 
             $request->session()->regenerateToken();

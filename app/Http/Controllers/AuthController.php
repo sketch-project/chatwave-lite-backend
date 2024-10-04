@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Services\AuthService;
 use App\Services\UserService;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
@@ -31,6 +32,15 @@ class AuthController extends Controller
             'access_token' => $result['access_token'],
             'refresh_token' => $result['refresh_token'],
         ];
+    }
+
+    public function logout(Request $request): JsonResponse
+    {
+        $this->authService->logout($request);
+
+        return response()->json([
+            'message' => 'Successfully logged out',
+        ]);
     }
 
     public function register(StoreUserRequest $request): UserResource

@@ -52,7 +52,29 @@ class AuthTest extends TestCase
         ]);
     }
 
-    public function test_login_with_correct_credentials(): void
+    public function test_login_successfully_with_email(): void
+    {
+        $user = User::factory(null, [
+            'password' => 'secret'
+        ])->create();
+
+        $response = $this->postJson(route('login'), [
+            'username' => $user->email,
+            'password' => 'secret',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonStructure(['data', 'access_token', 'refresh_token'])
+            ->assertJson([
+                'data' => [
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                ]
+            ]);
+    }
+
+    public function test_login_successfully_with_username(): void
     {
         $user = User::factory(null, [
             'password' => 'secret'
@@ -65,6 +87,55 @@ class AuthTest extends TestCase
 
         $response->assertOk()
             ->assertJsonStructure(['data', 'access_token', 'refresh_token'])
+            ->assertJson([
+                'data' => [
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                ]
+            ]);
+    }
+
+    public function test_retrieve_logged_user_profile(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->getJson(route('profile'));
+
+        $response->assertOk()
+            ->assertJson([
+                'data' => [
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'email' => $user->email,
+                ]
+            ]);
+    }
+
+    public function test_logout()
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->postJson(route('logout'));
+
+        $response->assertOk();
+    }
+
+    public function test_register_successfully(): void
+    {
+        $response = $this->postJson(route('register'), [
+            'name' => $this->faker->name(),
+            'email' => $email = $this->faker->email(),
+            'username' => $this->faker->userName(),
+            'phone_number' => $this->faker->phoneNumber(),
+            'password' => $password = $this->faker->password(),
+            'password_confirmation' => $password,
+            'agreement' => 1,
+        ]);
+
+        $user = User::where('email', $email)->first();
+
+        $response->assertCreated()
             ->assertJson([
                 'data' => [
                     'name' => $user->name,
