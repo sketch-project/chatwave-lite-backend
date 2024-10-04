@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Enums\ChatType;
 use App\Models\Chat;
+use App\Models\Message;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -35,6 +36,13 @@ class ChatRepository extends BaseRepository
             ->groupBy('chats.id')
             ->havingRaw('COUNT(chats.id) = ?', [count($userIds)])
             ->first();
+    }
+
+    public function updateLastMessage(Chat $chat, Message $message): bool
+    {
+        $chat->last_message_id = $message->id;
+
+        return $chat->save();
     }
 
     public function addParticipants(Chat $chat, array $participants)

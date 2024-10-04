@@ -7,6 +7,7 @@ use App\Http\Requests\Chat\StoreChatRequest;
 use App\Http\Requests\Chat\UpdateChatAvatarRequest;
 use App\Http\Requests\Chat\UpdateChatRequest;
 use App\Models\Chat;
+use App\Models\Message;
 use App\Models\User;
 use App\Repositories\ChatRepository;
 use Exception;
@@ -79,6 +80,11 @@ readonly class ChatService
             'avatar' => $avatar,
             'description' => $request->input('description'),
         ]);
+    }
+
+    public function updateLastMessage(Chat $chat, Message $message): bool
+    {
+        return $this->chatRepository->updateLastMessage($chat, $message);
     }
 
     /**

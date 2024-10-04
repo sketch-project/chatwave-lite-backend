@@ -30,7 +30,7 @@ class StoreUserRequest extends FormRequest
             'email' => ['required', 'max:50', Rule::unique(User::class, 'email')],
             'password' => ['required', 'confirmed', Password::min(5)],
             'password_confirmation' => 'sometimes|required',
-            'phone_number' => 'required|max:20',
+            'phone_number' => ['required', 'numeric', Rule::unique(User::class, 'phone_number')],
             'agreement' => 'accepted',
         ];
     }

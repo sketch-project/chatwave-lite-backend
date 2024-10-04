@@ -16,6 +16,7 @@ readonly class MessageService
     public function __construct(
         private MessageRepository $messageRepository,
         private MediaService $mediaService,
+        private ChatService $chatService,
     ) {}
 
     public function getAllPaginated(Chat $chat): CursorPaginator
@@ -38,7 +39,11 @@ readonly class MessageService
                 $data['media_id'] = $media->id;
             }
 
-            return $this->messageRepository->create($chat, $data);
+            $message = $this->messageRepository->create($chat, $data);
+
+            $this->chatService->updateLastMessage($chat, $message);
+
+            return $message;
         });
     }
 

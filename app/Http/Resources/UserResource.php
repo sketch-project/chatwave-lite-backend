@@ -20,9 +20,12 @@ class UserResource extends JsonResource
             'username' => $this->username,
             'email' => $this->email,
             'phone_number' => $this->phone_number,
+            'avatar_url' => $this->avatar_url,
             'is_admin' => $this->whenPivotLoadedAs('chatParticipants', 'chat_participants', function () {
                 return $this->chatParticipants->is_admin;
             }),
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
         ];
     }
 }

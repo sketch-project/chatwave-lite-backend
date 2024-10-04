@@ -6,6 +6,7 @@ use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
 use App\Models\User;
 use App\Repositories\UserRepository;
+use Illuminate\Auth\Events\Registered;
 
 readonly class UserService
 {
@@ -22,9 +23,9 @@ readonly class UserService
         }
         $user = $this->userRepository->create($data);
 
-        //event(new Registered($user));
+        event(new Registered($user));
 
-        return $user;
+        return $user->refresh();
     }
 
     public function update(User $user, UpdateUserRequest $request): bool

@@ -72,4 +72,13 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsToMany(Chat::class, 'chat_participants', 'user_id', 'chat_id');
     }
+
+    public function avatarUrl(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value, array $attributes) => $attributes['avatar']
+                ? route('static-asset', $attributes['avatar'])
+                : null
+        );
+    }
 }

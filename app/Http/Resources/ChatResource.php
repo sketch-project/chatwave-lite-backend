@@ -18,12 +18,11 @@ class ChatResource extends JsonResource
             'id' => $this->id,
             'type' => $this->type,
             'name' => $this->name,
-            'avatar' => $this->avatar,
             'avatar_url' => $this->avatar_url,
             'description' => $this->description,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'last_message' => $this->lastMessage,
+            'last_message' => LastMessageResource::make($this->lastMessage),
             'participants' => UserResource::collection($this->participants),
         ];
     }
