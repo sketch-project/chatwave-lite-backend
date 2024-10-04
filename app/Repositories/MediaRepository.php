@@ -4,10 +4,12 @@ namespace App\Repositories;
 
 use App\Models\Media;
 
-class MediaRepository extends BaseRepository
+readonly class MediaRepository
 {
-    public function __construct(Media $model)
+    public function __construct(private Media $model) {}
+
+    public function create($data)
     {
-        parent::__construct($model);
+        return $this->model->newInstance()->create($data)->refresh();
     }
 }

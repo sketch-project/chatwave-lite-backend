@@ -17,14 +17,6 @@ class ChatPolicy
     }
 
     /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Chat $chat): bool
-    {
-        return $chat->participants->contains($user);
-    }
-
-    /**
      * Determine whether the user can create models.
      */
     public function create(User $user): bool

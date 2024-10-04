@@ -17,14 +17,6 @@ class MessagePolicy
     }
 
     /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, Message $message): bool
-    {
-        return $user->id == $message->user_id;
-    }
-
-    /**
      * Determine whether the user can create models.
      */
     public function create(User $user, Chat $chat): bool

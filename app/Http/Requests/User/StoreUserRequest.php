@@ -34,4 +34,11 @@ class StoreUserRequest extends FormRequest
             'agreement' => 'accepted',
         ];
     }
+
+    protected function prepareForValidation()
+    {
+        $this->merge([
+            'phone_number' => preg_replace('/\D/', '', $this->phone_number),
+        ]);
+    }
 }

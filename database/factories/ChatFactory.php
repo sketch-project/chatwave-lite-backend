@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\ChatType;
+use App\Models\Message;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,6 +23,7 @@ class ChatFactory extends Factory
             'name' => $this->faker->name(),
             'description' => $this->faker->text(),
             'avatar' => $this->faker->filePath(),
+            'last_message_id' => $this->faker->boolean() ? Message::factory() : null,
         ];
     }
 

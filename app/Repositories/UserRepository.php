@@ -32,15 +32,4 @@ readonly class UserRepository
     {
         return $user->fill($data)->save();
     }
-
-    public function delete($user): bool|int|null
-    {
-        if ($user instanceof User) {
-            $result = $user->delete();
-        } else {
-            $result = $this->model->destroy($user);
-        }
-
-        return $result;
-    }
 }

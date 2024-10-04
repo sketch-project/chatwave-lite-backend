@@ -72,8 +72,9 @@ class MessageTest extends TestCase
         $response->assertCreated()
             ->assertJson([
                 'data' => [
-                    'chat_id' => $chat->id,
-                    'user_id' => $user->id,
+                    'user' => [
+                        'id' => $user->id
+                    ],
                     'message_type' => $data['message_type'],
                     'content' => $data['content'],
                 ]
@@ -95,24 +96,32 @@ class MessageTest extends TestCase
             ->private()
             ->hasAttached([$user, $partner], ['is_admin' => true], 'participants')
             ->create();
+        $message = $chat->messages()->create([
+            'user_id' => $partner->id,
+            'message_type' => MessageType::TEXT->value,
+            'content' => 'Send me a message'
+        ]);
 
         Storage::fake('media');
         $data = [
             'message_type' => MessageType::IMAGE->value,
             'content' => $this->faker->realText(),
             'media' => UploadedFile::fake()->image('image.jpg'),
+            'reply_id' => $message->id,
         ];
         $response = $this->actingAs($user)->postJson(route('chats.messages.store', $chat), $data);
 
+        $media = $chat->messages->where('user_id', $user->id)->first()->media;
         $response->assertCreated()
             ->assertJson([
                 'data' => [
-                    'chat_id' => $chat->id,
-                    'user_id' => $user->id,
+                    'user' => [
+                        'id' => $user->id
+                    ],
                     'message_type' => $data['message_type'],
                     'content' => $data['content'],
                     'media' => [
-                        'file_name' => 'image.jpg'
+                        'file_name' => $media->file_name
                     ]
                 ]
             ]);
@@ -121,7 +130,54 @@ class MessageTest extends TestCase
             'chat_id' => $chat->id,
             'message_type' => $data['message_type'],
             'content' => $data['content'],
-            'media_id' => $chat->messages->first()->media->id,
+            'media_id' => $media->id,
+        ]);
+    }
+
+    public function test_user_can_successfully_send_image_base64_message(): void
+    {
+        $user = User::factory()->create();
+        $partner = User::factory()->create();
+
+        $chat = Chat::factory()
+            ->private()
+            ->hasAttached([$user, $partner], ['is_admin' => true], 'participants')
+            ->create();
+        $message = $chat->messages()->create([
+            'user_id' => $partner->id,
+            'message_type' => MessageType::TEXT->value,
+            'content' => 'Send me a message'
+        ]);
+
+        Storage::fake('media');
+        $data = [
+            'message_type' => MessageType::IMAGE->value,
+            'content' => $this->faker->realText(),
+            'media_base64' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII',
+            'reply_id' => $message->id,
+        ];
+        $response = $this->actingAs($user)->postJson(route('chats.messages.store', $chat), $data);
+
+        $media = $chat->messages->where('user_id', $user->id)->first()->media;
+        $response->assertCreated()
+            ->assertJson([
+                'data' => [
+                    'user' => [
+                        'id' => $user->id
+                    ],
+                    'message_type' => $data['message_type'],
+                    'content' => $data['content'],
+                    'media' => [
+                        'file_name' => $media->file_name
+                    ]
+                ]
+            ]);
+
+        $this->assertDatabaseHas(Message::class, [
+            'chat_id' => $chat->id,
+            'message_type' => $data['message_type'],
+            'content' => $data['content'],
+            'media_id' => $media->id,
         ]);
     }
 
@@ -174,8 +230,9 @@ class MessageTest extends TestCase
         $response->assertOk()
             ->assertJson([
                 'data' => [
-                    'chat_id' => $chat->id,
-                    'user_id' => $user->id,
+                    'user' => [
+                        'id' => $user->id
+                    ],
                     'content' => $data['content'],
                 ]
             ]);

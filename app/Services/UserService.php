@@ -16,11 +16,8 @@ readonly class UserService
 
     public function create(StoreUserRequest $request): User
     {
-        $data = $request->except('avatar');
-        if ($avatar = $request->file('avatar')) {
-            $result = $avatar->store('avatars/' . date('Y/m'));
-            $data['avatar'] = $result ?: null;
-        }
+        $data = $request->validated();
+
         $user = $this->userRepository->create($data);
 
         event(new Registered($user));
@@ -44,10 +41,5 @@ readonly class UserService
         $this->userRepository->update($user, $data);
 
         return $user->save();
-    }
-
-    public function delete($user): bool
-    {
-        return $this->userRepository->delete($user);
     }
 }

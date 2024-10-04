@@ -68,16 +68,15 @@ readonly class ChatService
 
     public function update(Chat $chat, UpdateChatRequest $request): bool
     {
-        $avatar = $request->file('avatar');
-        if ($avatar) {
-            $avatar = $avatar->store('avatars/' . date('Y/m')) ?: $chat->avatar;
+        if ($avatar = $request->file('avatar')) {
+            $avatarPath = $avatar->store('avatars/' . date('Y/m')) ?: $chat->avatar;
         } else {
-            $avatar = $chat->avatar;
+            $avatarPath = $chat->avatar;
         }
 
         return $this->chatRepository->update($chat, [
             'name' => $request->input('name'),
-            'avatar' => $avatar,
+            'avatar' => $avatarPath,
             'description' => $request->input('description'),
         ]);
     }

@@ -45,7 +45,7 @@ class UpdateUserRequest extends FormRequest
                 'nullable',
                 'string',
                 'confirmed',
-                Password::min(5)
+                Password::min(5),
             ],
         ];
     }

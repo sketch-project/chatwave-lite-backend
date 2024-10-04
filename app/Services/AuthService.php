@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -54,11 +53,6 @@ readonly class AuthService
             'access_token' => $token->plainTextToken,
             'refresh_token' => Str::random(48),
         ];
-    }
-
-    public function authenticateById($userId): false|Authenticatable
-    {
-        return Auth::loginUsingId($userId);
     }
 
     public function logout(Request $request): void

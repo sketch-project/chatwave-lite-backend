@@ -96,18 +96,26 @@ class AuthTest extends TestCase
             ]);
     }
 
-    public function test_retrieve_logged_user_profile(): void
+    public function test_login_successfully_with_phone_number(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory(null, [
+            'phone_number' => '628565540000',
+            'password' => 'secret'
+        ])->create();
 
-        $response = $this->actingAs($user)->getJson(route('profile'));
+        $response = $this->postJson(route('login'), [
+            'username' => $user->phone_number,
+            'password' => 'secret',
+        ]);
 
         $response->assertOk()
+            ->assertJsonStructure(['data', 'access_token', 'refresh_token'])
             ->assertJson([
                 'data' => [
                     'name' => $user->name,
                     'username' => $user->username,
                     'email' => $user->email,
+                    'phone_number' => $user->phone_number,
                 ]
             ]);
     }
@@ -116,7 +124,11 @@ class AuthTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->postJson(route('logout'));
+        $token = $user->createToken('app-token')->plainTextToken;
+
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $token,
+        ])->postJson(route('logout'));
 
         $response->assertOk();
     }

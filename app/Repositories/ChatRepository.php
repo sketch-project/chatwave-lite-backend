@@ -6,22 +6,16 @@ use App\Enums\ChatType;
 use App\Models\Chat;
 use App\Models\Message;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Http\Request;
 
-class ChatRepository extends BaseRepository
+readonly class ChatRepository
 {
-    public function __construct(Chat $model)
-    {
-        parent::__construct($model);
-    }
+    public function __construct(private Chat $model) {}
 
-    public function getAllPaginated(?Request $request = null, $options = null)
+    public function getAllPaginated(?Request $request = null): CursorPaginator
     {
-        return $this->model->query()
-            ->whereHas('participants', function (Builder $query) use ($request) {
-                $query->where('user_id', $request->user()->id);
-            })
+        return $request->user()->chats()
             ->orderBy('updated_at', 'desc')
             ->cursorPaginate();
     }
@@ -36,6 +30,16 @@ class ChatRepository extends BaseRepository
             ->groupBy('chats.id')
             ->havingRaw('COUNT(chats.id) = ?', [count($userIds)])
             ->first();
+    }
+
+    public function create($data)
+    {
+        return $this->model->newInstance()->create($data)->refresh();
+    }
+
+    public function update(Chat $chat, $data = null): bool
+    {
+        return $chat->fill($data)->save();
     }
 
     public function updateLastMessage(Chat $chat, Message $message): bool
@@ -76,5 +80,10 @@ class ChatRepository extends BaseRepository
         $chat->participants()->syncWithPivotValues($user, ['is_admin' => false], false);
 
         return $user;
+    }
+
+    public function delete(Chat $chat): ?bool
+    {
+        return $chat->delete();
     }
 }

@@ -35,7 +35,8 @@ readonly class MessageService
 
         return DB::transaction(function () use ($chat, $data, $request) {
             if ($data['message_type'] != MessageType::TEXT->value) {
-                $media = $this->mediaService->create($request->file('media'));
+                $file = $request->file('media') ?: $request->input('media_base64');
+                $media = $this->mediaService->create($file);
                 $data['media_id'] = $media->id;
             }
 
