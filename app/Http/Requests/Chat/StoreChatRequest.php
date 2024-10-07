@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Chat;
 
 use App\Enums\ChatType;
+use App\Http\Requests\Message\StoreMessageRequest;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,9 +26,13 @@ class StoreChatRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'type' => ['required', Rule::enum(ChatType::class)],
-            'name' => ['nullable', 'string', 'max:100'],
+            'name' => [
+                'required_if:type,' . ChatType::GROUP->value,
+                'string',
+                'max:100',
+            ],
             'avatar' => [
                 'nullable',
                 File::image()
@@ -40,16 +45,36 @@ class StoreChatRequest extends FormRequest
                 $this->input('type') == ChatType::GROUP->value
                     ? 'min:2' // group at least total participant is 2 (+1 initiated user)
                     : 'size:1', // private should only 1 (+1 initiated user)
-                Rule::notIn([auth()->user()->id]), // cannot add itself
             ],
-            'participants.*' => [Rule::exists(User::class, 'id')],
+            'participants.*' => [
+                Rule::exists(User::class, 'id'),
+                Rule::notIn([$this->user()->id]), // cannot add itself
+            ],
         ];
+
+        if ($this->filled('message')) {
+            $messageRequest = new StoreMessageRequest;
+            $messageRequest->merge($this->input('message', []));
+            $messageRules = $messageRequest->rules();
+            foreach ($messageRules as $key => $rule) {
+                $rules["message.{$key}"] = $rule;
+            }
+        } else {
+            $rules['message'] = ['nullable'];
+        }
+
+        return $rules;
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
-            'not_in' => 'Cannot select yourself as other participant.',
+            'name' => [
+                'required_if' => 'The name field is required when type is group.',
+            ],
+            'participants.*' => [
+                'not_in' => 'Cannot select yourself as other participant.',
+            ],
         ];
     }
 }

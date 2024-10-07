@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Enums\ChatType;
+use App\Events\ChatCreated;
+use App\Events\ChatUpdated;
 use App\Http\Requests\Chat\StoreChatRequest;
 use App\Http\Requests\Chat\UpdateChatAvatarRequest;
 use App\Http\Requests\Chat\UpdateChatRequest;
+use App\Http\Requests\Message\StoreMessageRequest;
 use App\Models\Chat;
 use App\Models\Message;
 use App\Models\User;
@@ -21,7 +24,8 @@ use Illuminate\Validation\ValidationException;
 readonly class ChatService
 {
     public function __construct(
-        private ChatRepository $chatRepository
+        private ChatRepository $chatRepository,
+        private MessageService $messageService,
     ) {}
 
     public function getAllPaginated(Request $request)
@@ -43,6 +47,8 @@ readonly class ChatService
                 $request->user()->id, ...$participants,
             ]);
             if (!empty($existingChat)) {
+                broadcast(new ChatCreated($existingChat))->toOthers();
+
                 return $existingChat;
             }
         }
@@ -55,12 +61,21 @@ readonly class ChatService
                 'description' => $request->input('description'),
             ]);
 
-            $this->chatRepository->addParticipants($chat, [
-                $request->user()->id => ['is_admin' => true],
-                ...collect($participants)
-                    ->mapWithKeys(fn ($id) => [$id => ['is_admin' => false]])
-                    ->toArray(),
-            ]);
+            $this->chatRepository->addParticipants($chat, collect($participants)
+                ->mapWithKeys(fn ($id) => [$id => ['is_admin' => false]])
+                ->put($request->user()->id, ['is_admin' => true])
+                ->toArray()
+            );
+
+            if ($request->filled('message')) {
+                $messageRequest = new StoreMessageRequest($request->input('message'));
+                $messageRequest->setUserResolver(function () use ($request) {
+                    return $request->user();
+                });
+                $this->messageService->create($chat, $messageRequest, shouldBroadcast: false);
+            }
+
+            broadcast(new ChatCreated($chat))->toOthers();
 
             return $chat;
         });
@@ -74,11 +89,17 @@ readonly class ChatService
             $avatarPath = $chat->avatar;
         }
 
-        return $this->chatRepository->update($chat, [
+        $result = $this->chatRepository->update($chat, [
             'name' => $request->input('name'),
             'avatar' => $avatarPath,
             'description' => $request->input('description'),
         ]);
+
+        if ($result) {
+            broadcast(new ChatUpdated($chat))->toOthers();
+        }
+
+        return $result;
     }
 
     public function updateLastMessage(Chat $chat, Message $message): bool

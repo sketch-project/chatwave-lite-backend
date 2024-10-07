@@ -31,6 +31,11 @@ class Message extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function chat(): BelongsTo
+    {
+        return $this->belongsTo(Chat::class);
+    }
+
     public function media(): BelongsTo
     {
         return $this->belongsTo(Media::class);

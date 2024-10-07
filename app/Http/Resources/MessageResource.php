@@ -16,12 +16,14 @@ class MessageResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'chat_id' => $this->chat_id,
             'message_type' => $this->message_type,
             'user' => new UserResource($this->user),
             'content' => $this->content,
             'reply' => $this->when($this->reply_id, function () {
                 return new ReplyMessageResource($this->reply);
             }),
+            'chat' => ChatResource::make($this->chat),
             'media' => MediaResource::make($this->media),
             'is_forwarded' => $this->is_forwarded,
             'created_at' => $this->created_at,
