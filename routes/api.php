@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('chats/{chat}/make-admin/{user}', [ChatController::class, 'makeAsAdmin'])->name('chats.make-admin');
     Route::patch('chats/{chat}/dismiss-admin/{user}', [ChatController::class, 'dismissAsAdmin'])->name('chats.dismiss-admin');
     Route::put('chats/{chat}/update-avatar', [ChatController::class, 'updateAvatar'])->name('chats.update-avatar');
+    Route::patch('chats/{chat}/toggle-pin', [ChatController::class, 'togglePin'])->name('chats.toggle-pin');
 
     Route::get('chats/{chat}/messages', [MessageController::class, 'index'])->name('chats.messages.index');
     Route::post('chats/{chat}/messages', [MessageController::class, 'store'])->name('chats.messages.store');

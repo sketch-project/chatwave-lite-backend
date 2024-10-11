@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignUlid('chat_id')->constrained('chats')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnUpdate()->cascadeOnDelete();
             $table->boolean('is_admin')->default(true);
+            $table->boolean('is_pinned')->default(false);
             $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
             $table->unique(['chat_id', 'user_id']);
         });

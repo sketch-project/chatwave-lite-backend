@@ -214,6 +214,13 @@ readonly class ChatService
         return $this->chatRepository->dismissAsAdmin($chat, $user);
     }
 
+    public function togglePin(Chat $chat, User $user): Chat
+    {
+        $this->chatRepository->togglePin($chat, $user);
+
+        return $chat;
+    }
+
     public function delete(Chat $chat): bool
     {
         return $this->chatRepository->delete($chat);

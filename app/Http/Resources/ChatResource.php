@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 class ChatResource extends JsonResource
 {
@@ -24,6 +25,7 @@ class ChatResource extends JsonResource
             'updated_at' => $this->updated_at,
             'last_message' => LastMessageResource::make($this->lastMessage),
             'participants' => UserResource::collection($this->participants),
+            'is_pinned' => $this->participants->first(fn ($participant) => $participant->id == Auth::user()?->id)?->chatParticipants?->is_pinned ?? false,
         ];
     }
 }

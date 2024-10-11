@@ -127,6 +127,18 @@ class ChatController extends Controller
     /**
      * @throws AuthorizationException
      */
+    public function togglePin(Chat $chat, Request $request): ChatResource
+    {
+        $this->authorize('update', $chat);
+
+        $this->chatService->togglePin($chat, $request->user());
+
+        return ChatResource::make($chat);
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
     public function destroy(Chat $chat): Response
     {
         $this->authorize('delete', $chat);

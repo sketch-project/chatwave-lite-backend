@@ -35,7 +35,7 @@ class Chat extends Model
     {
         return $this->belongsToMany(User::class, 'chat_participants', 'chat_id', 'user_id')
             ->as('chatParticipants')
-            ->withPivot('is_admin');
+            ->withPivot(['is_admin', 'is_pinned']);
     }
 
     public function lastMessage(): BelongsTo

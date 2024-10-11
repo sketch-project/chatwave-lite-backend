@@ -14,9 +14,11 @@ class ChatParticipant extends Model
 
     protected $fillable = [
         'is_admin',
+        'is_pinned',
     ];
 
     protected $casts = [
         'is_admin' => 'boolean',
+        'is_pinned' => 'boolean',
     ];
 }

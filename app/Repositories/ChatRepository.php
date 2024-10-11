@@ -82,6 +82,18 @@ readonly class ChatRepository
         return $user;
     }
 
+    public function togglePin(Chat $chat, User $user): int
+    {
+        $isPinned = $chat->participants()
+            ->where('user_id', $user->id)
+            ->lockForUpdate()
+            ->first()
+            ->chatParticipants
+            ->is_pinned;
+
+        return $chat->participants()->updateExistingPivot($user, ['is_pinned' => !$isPinned]);
+    }
+
     public function delete(Chat $chat): ?bool
     {
         return $chat->delete();
