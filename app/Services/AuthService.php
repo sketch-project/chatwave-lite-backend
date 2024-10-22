@@ -63,7 +63,7 @@ readonly class AuthService
         }
 
         if ($request->hasSession()) {
-            Auth::logout();
+            Auth::guard('web')->logout();
 
             $request->session()->invalidate();
 
