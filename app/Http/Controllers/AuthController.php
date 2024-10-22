@@ -28,6 +28,10 @@ class AuthController extends Controller
         $password = $request->post('password');
         $result = $this->authService->authenticate($username, $password);
 
+        if (in_array('web', $request->route()->gatherMiddleware())) {
+            $request->session()->regenerate();
+        }
+
         return AuthResource::make($result);
     }
 
