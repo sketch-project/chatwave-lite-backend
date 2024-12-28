@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\ChatType;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,9 @@ class ChatResource extends JsonResource
         return [
             'id' => $this->id,
             'type' => $this->type,
-            'name' => $this->name,
+            'name' => $this->type == ChatType::GROUP
+                ? $this->name
+                : $this->participants->first(fn ($item) => $item->id != $request->user()->id)?->name,
             'avatar_url' => $this->avatar_url,
             'description' => $this->description,
             'created_at' => $this->created_at,

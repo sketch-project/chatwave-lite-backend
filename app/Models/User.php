@@ -73,6 +73,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsToMany(Chat::class, 'chat_participants', 'user_id', 'chat_id');
     }
 
+    public function pinnedChats(): BelongsToMany
+    {
+        return $this->belongsToMany(Chat::class, 'chat_participants', 'user_id', 'chat_id')
+            ->wherePivot('is_pinned', 1);
+    }
+
     public function avatarUrl(): Attribute
     {
         return Attribute::make(

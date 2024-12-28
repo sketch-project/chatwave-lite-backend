@@ -38,6 +38,16 @@ class ChatController extends Controller
     /**
      * @throws AuthorizationException
      */
+    public function pinned(Request $request): AnonymousResourceCollection
+    {
+        $this->authorize('view-any', Chat::class);
+
+        return ChatResource::collection($this->chatService->getPinnedChats($request));
+    }
+
+    /**
+     * @throws AuthorizationException
+     */
     public function store(StoreChatRequest $request): ChatResource
     {
         $this->authorize('create', Chat::class);

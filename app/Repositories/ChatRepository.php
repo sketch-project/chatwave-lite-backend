@@ -7,6 +7,8 @@ use App\Models\Chat;
 use App\Models\Message;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 
 readonly class ChatRepository
@@ -16,8 +18,25 @@ readonly class ChatRepository
     public function getAllPaginated(?Request $request = null): CursorPaginator
     {
         return $request->user()->chats()
+            ->when($request->string('type')->toString(), function (Builder $baseQuery, string $type) {
+                if ($type != 'all') {
+                    $baseQuery->where('type', $type);
+                }
+            })
             ->orderBy('updated_at', 'desc')
             ->cursorPaginate();
+    }
+
+    public function getPinnedChats(?Request $request = null): Collection
+    {
+        return $request->user()->pinnedChats()
+            ->when($request->string('type')->toString(), function (Builder $baseQuery, string $type) {
+                if ($type != 'all') {
+                    $baseQuery->where('type', $type);
+                }
+            })
+            ->orderBy('updated_at', 'desc')
+            ->get();
     }
 
     public function getPrivateChatByUserIds(array $userIds)

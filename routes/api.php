@@ -15,6 +15,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('account', [AccountController::class, 'update'])->name('account.update');
 
     Route::get('chats', [ChatController::class, 'index'])->name('chats.index');
+    Route::get('chats/pinned', [ChatController::class, 'pinned'])->name('chats.pinned');
     Route::post('chats', [ChatController::class, 'store'])->name('chats.store');
     Route::put('chats/{chat}', [ChatController::class, 'update'])->name('chats.update');
     Route::delete('chats/{chat}', [ChatController::class, 'destroy'])->name('chats.destroy');

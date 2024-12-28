@@ -33,6 +33,11 @@ readonly class ChatService
         return $this->chatRepository->getAllPaginated($request);
     }
 
+    public function getPinnedChats(Request $request)
+    {
+        return $this->chatRepository->getPinnedChats($request);
+    }
+
     public function create(StoreChatRequest $request): Chat
     {
         $avatar = $request->file('avatar');
