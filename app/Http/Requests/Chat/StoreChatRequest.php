@@ -69,12 +69,8 @@ class StoreChatRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name' => [
-                'required_if' => 'The name field is required when type is group.',
-            ],
-            'participants.*' => [
-                'not_in' => 'Cannot select yourself as other participant.',
-            ],
+            'name.required_if' => 'The name field is required when type is group.',
+            'participants.*.not_in' => 'Cannot select yourself as other participant.',
         ];
     }
 }
