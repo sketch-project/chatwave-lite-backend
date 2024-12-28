@@ -18,6 +18,15 @@ readonly class ChatRepository
     public function getAllPaginated(?Request $request = null): CursorPaginator
     {
         return $request->user()->chats()
+            ->when($request?->filled('search'), function (Builder $baseQuery) use ($request) {
+                $search = $request->string('search');
+                $baseQuery->where(function (Builder $query) use ($search) {
+                    $query
+                        ->where('name', 'like', "%$search%")
+                        ->orWhere('description', 'like', "%$search%")
+                        ->orWhereHas('participants', fn ($query) => $query->where('name', 'like', "$search%"));
+                });
+            })
             ->when($request->string('type')->toString(), function (Builder $baseQuery, string $type) {
                 if ($type != 'all') {
                     $baseQuery->where('type', $type);
@@ -30,6 +39,15 @@ readonly class ChatRepository
     public function getPinnedChats(?Request $request = null): Collection
     {
         return $request->user()->pinnedChats()
+            ->when($request?->filled('search'), function (Builder $baseQuery) use ($request) {
+                $search = $request->string('search');
+                $baseQuery->where(function (Builder $query) use ($search) {
+                    $query
+                        ->where('name', 'like', "%$search%")
+                        ->orWhere('description', 'like', "%$search%")
+                        ->orWhereHas('participants', fn ($query) => $query->where('name', 'like', "$search%"));
+                });
+            })
             ->when($request->string('type')->toString(), function (Builder $baseQuery, string $type) {
                 if ($type != 'all') {
                     $baseQuery->where('type', $type);
